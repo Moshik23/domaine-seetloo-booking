@@ -1,5 +1,9 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import type { ConflictDetail } from "@/lib/conflicts";
 import { formatDateDisplay } from "@/lib/dateUtils";
+import { playConflictChime } from "@/lib/sound";
 
 /** One clash per (booking, date) — staff need "who, when", not every technical block. */
 function summarizeConflicts(conflicts: ConflictDetail[]) {
@@ -21,6 +25,15 @@ function summarizeConflicts(conflicts: ConflictDetail[]) {
 }
 
 export function ConflictWarningBanner({ conflicts }: { conflicts: ConflictDetail[] }) {
+  const wasShowing = useRef(false);
+
+  useEffect(() => {
+    if (conflicts.length > 0 && !wasShowing.current) {
+      playConflictChime();
+    }
+    wasShowing.current = conflicts.length > 0;
+  }, [conflicts.length]);
+
   if (conflicts.length === 0) return null;
 
   const summary = summarizeConflicts(conflicts);
