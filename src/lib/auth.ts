@@ -4,9 +4,13 @@ import bcrypt from "bcryptjs";
 
 export interface SessionData {
   isLoggedIn: boolean;
+  lastActivity?: number; // ms since epoch, refreshed on every authenticated request
 }
 
 const defaultSession: SessionData = { isLoggedIn: false };
+
+/** Idle sessions are force-logged-out after this long, independent of the cookie's own 30-day ceiling. */
+export const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 
 export const sessionOptions: SessionOptions = {
   password: requireSessionSecret(),

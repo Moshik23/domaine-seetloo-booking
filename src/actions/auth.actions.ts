@@ -21,6 +21,7 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
 
   const session = await getSession();
   session.isLoggedIn = true;
+  session.lastActivity = Date.now();
   await session.save();
 
   redirect("/");

@@ -127,6 +127,16 @@ export default function HelpPage() {
           bookings.
         </p>
       </Section>
+
+      <Section title="Getting logged out automatically">
+        <p>
+          If the portal sits open without any clicks or page changes for <strong>30 minutes</strong>,
+          it logs out on its own and sends you back to the password screen. This is a security measure
+          now that the portal is reachable over the open internet, not just from this computer. Any
+          activity — clicking around, saving a booking — resets the 30 minutes, so it only logs out
+          during genuine idle time.
+        </p>
+      </Section>
     </div>
   );
 }
