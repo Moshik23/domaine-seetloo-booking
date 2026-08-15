@@ -47,27 +47,9 @@ jobs:
 
       - name: Deploy to EC2 via SSM
         run: |
-          cat > /tmp/deploy-script.sh <<'SCRIPT'
-          set -e
-          cd /home/ec2-user/domaine-seetloo-booking
-          git fetch origin master
-          git reset --hard origin/master
-          npm ci
-          pm2 stop domaine-seetloo
-          npx prisma migrate deploy
-          npx prisma generate
-          npm run build
-          pm2 restart domaine-seetloo
-          SCRIPT
+          DEPLOY_CMD="sudo -u ec2-user -i -- bash -c 'set -e; cd /home/ec2-user/domaine-seetloo-booking; git fetch origin master; git reset --hard origin/master; npm ci; pm2 stop domaine-seetloo; npx prisma migrate deploy; npx prisma generate; npm run build; pm2 restart domaine-seetloo'"
 
-          python3 -c "
-          import json
-          with open('/tmp/deploy-script.sh') as f:
-              script = f.read()
-          params = {'commands': [f'sudo -u ec2-user -i bash -c {json.dumps(script)}']}
-          with open('/tmp/ssm-params.json', 'w') as f:
-              json.dump(params, f)
-          "
+          jq -n --arg cmd "$DEPLOY_CMD" '{commands: [$cmd]}' > /tmp/ssm-params.json
 
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${{ vars.INSTANCE_ID }}" \
