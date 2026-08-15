@@ -45,7 +45,7 @@ export function EventLineRow({ index, onRemove }: { index: number; onRemove: () 
         <Controller
           control={control}
           name={`events.${index}.endTime`}
-          render={({ field }) => <TimeSelect value={field.value} onChange={field.onChange} allowEmpty />}
+          render={({ field }) => <TimeSelect value={field.value} onChange={field.onChange} />}
         />
         <p className="mt-0.5 text-[10px] text-neutral-400 dark:text-neutral-600">optional end time</p>
       </div>

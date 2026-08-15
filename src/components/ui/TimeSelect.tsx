@@ -23,8 +23,6 @@ interface TimeSelectProps {
   /** "HH:mm" in 24-hour form (the domain format everywhere else in the app), or "". */
   value: string | null | undefined;
   onChange: (value: string) => void;
-  /** When true, an unset hour/minute is allowed (renders a "--" option and emits ""). */
-  allowEmpty?: boolean;
   className?: string;
 }
 
@@ -32,8 +30,11 @@ interface TimeSelectProps {
  * Hour (12h) + minute (15-min steps) + AM/PM dropdowns standing in for a native
  * <input type="time">, matching the 12-hour format used on the paper booking forms.
  * Still stores/emits plain 24-hour "HH:mm" strings — only the presentation is 12-hour.
+ * The hour/minute selects always include a "--" placeholder, whether or not this
+ * particular field is allowed to stay empty at submit time — required-ness is enforced
+ * by the form's validation schema, not by hiding the ability to see/select "unset" here.
  */
-export function TimeSelect({ value, onChange, allowEmpty = false, className = "" }: TimeSelectProps) {
+export function TimeSelect({ value, onChange, className = "" }: TimeSelectProps) {
   const [h24, m] = value ? value.split(":") : ["", ""];
   const { hour12, period } = h24 ? to12Hour(h24) : { hour12: "", period: "AM" as Period };
 
@@ -61,7 +62,10 @@ export function TimeSelect({ value, onChange, allowEmpty = false, className = ""
   return (
     <div className={`flex flex-wrap gap-1 ${className}`}>
       <select value={hour12} onChange={(e) => setHour(e.target.value)} className={selectClass} aria-label="Hour">
-        {allowEmpty && <option value="">--</option>}
+        {/* Always present, even for required fields — otherwise an unset value ("") has no
+            matching <option>, and the browser silently displays the first hour ("01") as if
+            it were chosen without ever firing onChange, masking a genuinely empty field. */}
+        <option value="">--</option>
         {HOURS_12.map((hh) => (
           <option key={hh} value={hh}>
             {hh}
@@ -69,7 +73,7 @@ export function TimeSelect({ value, onChange, allowEmpty = false, className = ""
         ))}
       </select>
       <select value={m} onChange={(e) => setMinute(e.target.value)} className={selectClass} aria-label="Minute">
-        {allowEmpty && <option value="">--</option>}
+        <option value="">--</option>
         {MINUTES.map((mm) => (
           <option key={mm} value={mm}>
             {mm}

@@ -317,7 +317,7 @@ export function BookingForm({
             <Controller
               control={control}
               name="timeIn"
-              render={({ field }) => <TimeSelect value={field.value} onChange={field.onChange} allowEmpty />}
+              render={({ field }) => <TimeSelect value={field.value} onChange={field.onChange} />}
             />
           </Field>
           <Field label="Date Out">
@@ -327,7 +327,7 @@ export function BookingForm({
             <Controller
               control={control}
               name="timeOut"
-              render={({ field }) => <TimeSelect value={field.value} onChange={field.onChange} allowEmpty />}
+              render={({ field }) => <TimeSelect value={field.value} onChange={field.onChange} />}
             />
           </Field>
         </section>
