@@ -36,6 +36,46 @@ export function formatTimeDisplay(time: string | null | undefined): string {
   return `${h12}:${mStr} ${period}`;
 }
 
+/** Groups a set of (possibly unsorted, possibly duplicate) "YYYY-MM-DD" dates into contiguous ranges. */
+export function groupConsecutiveDates(dates: string[]): { start: string; end: string }[] {
+  const sorted = Array.from(new Set(dates)).sort();
+  const ranges: { start: string; end: string }[] = [];
+  for (const date of sorted) {
+    const last = ranges[ranges.length - 1];
+    if (last && addOneDay(last.end) === date) {
+      last.end = date;
+    } else {
+      ranges.push({ start: date, end: date });
+    }
+  }
+  return ranges;
+}
+
+/**
+ * Merges a set of possibly-overlapping or adjacent "YYYY-MM-DD" date ranges (start/end pairs,
+ * not single dates) into the smallest number of non-overlapping ranges. Unlike
+ * groupConsecutiveDates, this preserves each range's own span rather than collapsing it to a
+ * single point, so a multi-day range doesn't "disappear" between two other ranges it fully spans.
+ */
+export function mergeDateRanges(ranges: { start: string; end: string }[]): { start: string; end: string }[] {
+  const sorted = [...ranges].sort((a, b) => a.start.localeCompare(b.start));
+  const merged: { start: string; end: string }[] = [];
+  for (const r of sorted) {
+    const last = merged[merged.length - 1];
+    if (last && r.start <= addOneDay(last.end)) {
+      if (r.end > last.end) last.end = r.end;
+    } else {
+      merged.push({ ...r });
+    }
+  }
+  return merged;
+}
+
+/** "YYYY-MM-DD" x2 -> "DD/MM/YYYY", or "DD/MM/YYYY – DD/MM/YYYY" if the range spans more than one day. */
+export function formatDateRangeDisplay(start: string, end: string): string {
+  return start === end ? formatDateDisplay(start) : `${formatDateDisplay(start)} – ${formatDateDisplay(end)}`;
+}
+
 /** Every "YYYY-MM-DD" from start to end, inclusive. Assumes start <= end. */
 export function eachDateInRange(start: string, end: string): string[] {
   const dates: string[] = [];

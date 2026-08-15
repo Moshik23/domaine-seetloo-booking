@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BookingForm, bookingToFormValues, type BookingWithEvents } from "./BookingForm";
 import { PaymentLog, type PaymentRow } from "@/components/payments/PaymentLog";
 import { AddPaymentForm } from "@/components/payments/AddPaymentForm";
@@ -20,8 +20,17 @@ export interface BookingDetailData extends Omit<BookingWithEvents, "events"> {
 
 export function BookingDetailClient({ booking }: { booking: BookingDetailData }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showCreatedBanner] = useState(() => searchParams.get("created") === "1");
+
+  useEffect(() => {
+    if (searchParams.get("created") === "1") {
+      router.replace(`/bookings/${booking.id}`, { scroll: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const outstanding = booking.agreedPrice - booking.deposit - booking.payments.reduce((s, p) => s + p.amount, 0);
 
@@ -70,6 +79,12 @@ export function BookingDetailClient({ booking }: { booking: BookingDetailData })
 
   return (
     <div className="space-y-6">
+      {showCreatedBanner && (
+        <div className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-base font-semibold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+          Booking Successful
+        </div>
+      )}
+
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">

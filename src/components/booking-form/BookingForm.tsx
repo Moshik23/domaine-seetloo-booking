@@ -264,7 +264,7 @@ export function BookingForm({
       return;
     }
     if (result.id) {
-      router.push(`/bookings/${result.id}`);
+      router.push(`/bookings/${result.id}?created=1`);
     } else {
       router.refresh();
     }
@@ -335,7 +335,7 @@ export function BookingForm({
         <section>
           <Field label="Occupancy (which venue this booking blocks)">
             <div className="flex gap-2">
-              <select className={inputClass} {...register("occupancyVenue")}>
+              <select className={`${inputClass} min-w-[10rem]`} {...register("occupancyVenue")}>
                 {(Object.keys(VENUE_LABELS) as Array<keyof typeof VENUE_LABELS>).map((v) => (
                   <option key={v} value={v}>
                     {VENUE_LABELS[v]}

@@ -8,7 +8,7 @@ export function EventLineRow({ index, onRemove }: { index: number; onRemove: () 
   const { register, control } = useFormContext<BookingFormValues>();
 
   return (
-    <div className="grid grid-cols-1 gap-2 rounded-md border border-neutral-200 p-3 lg:grid-cols-[1.2fr_0.8fr_0.9fr_1.3fr_1.3fr_auto] lg:items-start dark:border-neutral-800">
+    <div className="grid grid-cols-1 gap-2 rounded-md border border-neutral-200 p-3 lg:grid-cols-[1.2fr_1.1fr_0.9fr_1.3fr_1.3fr_auto] lg:items-start dark:border-neutral-800">
       <div>
         <input
           list={`event-presets-${index}`}
@@ -23,7 +23,7 @@ export function EventLineRow({ index, onRemove }: { index: number; onRemove: () 
         </datalist>
       </div>
 
-      <select className={inputClass} {...register(`events.${index}.venue`)}>
+      <select className={`${inputClass} min-w-[9rem]`} {...register(`events.${index}.venue`)}>
         {(Object.keys(VENUE_LABELS) as Array<keyof typeof VENUE_LABELS>).map((v) => (
           <option key={v} value={v}>
             {VENUE_LABELS[v]}

@@ -2,25 +2,37 @@
 
 import { useEffect, useRef } from "react";
 import type { ConflictDetail } from "@/lib/conflicts";
-import { formatDateDisplay } from "@/lib/dateUtils";
+import { mergeDateRanges, formatDateRangeDisplay } from "@/lib/dateUtils";
 import { playConflictChime } from "@/lib/sound";
 
-/** One clash per (booking, date) — staff need "who, when", not every technical block. */
+/**
+ * One clash per (booking, date range) — staff need "who, when", not every technical block.
+ * Uses each block's full start-end span (not just its start date) so a single multi-day
+ * block, e.g. a 4-day stay window, merges cleanly with other blocks inside it instead of
+ * fragmenting into misleading gaps.
+ */
 function summarizeConflicts(conflicts: ConflictDetail[]) {
-  const seen = new Set<string>();
-  const summary: { name: string; date: string }[] = [];
+  const byBooking = new Map<string, { name: string; ranges: { start: string; end: string }[] }>();
 
   for (const c of conflicts) {
-    const date = c.otherRange[0].split("T")[0];
-    const key = `${c.otherBookingId}-${date}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    summary.push({
-      name: [c.otherSurname, c.otherOtherNames].filter(Boolean).join(" "),
-      date,
+    if (!byBooking.has(c.otherBookingId)) {
+      byBooking.set(c.otherBookingId, {
+        name: [c.otherSurname, c.otherOtherNames].filter(Boolean).join(" "),
+        ranges: [],
+      });
+    }
+    byBooking.get(c.otherBookingId)!.ranges.push({
+      start: c.otherRange[0].split("T")[0],
+      end: c.otherRange[1].split("T")[0],
     });
   }
 
+  const summary: { name: string; start: string; end: string }[] = [];
+  for (const { name, ranges } of byBooking.values()) {
+    for (const range of mergeDateRanges(ranges)) {
+      summary.push({ name, ...range });
+    }
+  }
   return summary;
 }
 
@@ -46,7 +58,7 @@ export function ConflictWarningBanner({ conflicts }: { conflicts: ConflictDetail
       <ul className="mt-1 list-disc space-y-0.5 pl-5">
         {summary.map((s, i) => (
           <li key={i}>
-            {s.name} on {formatDateDisplay(s.date)}
+            {s.name} {s.start === s.end ? `on ${formatDateRangeDisplay(s.start, s.end)}` : `from ${formatDateRangeDisplay(s.start, s.start)} to ${formatDateRangeDisplay(s.end, s.end)}`}
           </li>
         ))}
       </ul>

@@ -1,17 +1,38 @@
 import { getHolidayNamesForDate } from "@/lib/publicHolidays";
 import { getInauspiciousPeriodsForDate } from "@/lib/hinduInauspiciousPeriods";
-import { formatDateDisplay } from "@/lib/dateUtils";
+import { groupConsecutiveDates, formatDateRangeDisplay } from "@/lib/dateUtils";
+
+/** Groups each date under every name that applies to it (a date can carry more than one, e.g. a holiday inside Chaturmas). */
+function groupDatesByName(dates: string[], namesForDate: (date: string) => string[]): Map<string, string[]> {
+  const byName = new Map<string, string[]>();
+  for (const date of dates) {
+    for (const name of namesForDate(date)) {
+      if (!byName.has(name)) byName.set(name, []);
+      byName.get(name)!.push(date);
+    }
+  }
+  return byName;
+}
 
 /** Informational only — never blocks a booking, unlike ConflictWarningBanner. */
 export function DateAdvisoryBanner({ dates }: { dates: string[] }) {
-  const holidayLines = dates.flatMap((date) =>
-    getHolidayNamesForDate(date).map((name) => `${formatDateDisplay(date)} is a public holiday (${name}).`),
+  const holidayLines = Array.from(groupDatesByName(dates, getHolidayNamesForDate).entries()).flatMap(
+    ([name, groupDates]) =>
+      groupConsecutiveDates(groupDates).map((r) => {
+        const range = formatDateRangeDisplay(r.start, r.end);
+        return r.start === r.end
+          ? `${range} is a public holiday (${name}).`
+          : `${range} includes a public holiday (${name}).`;
+      }),
   );
-  const hinduLines = dates.flatMap((date) =>
-    getInauspiciousPeriodsForDate(date).map(
-      (p) => `${formatDateDisplay(date)} falls within ${p.name} — ${p.note}.`,
-    ),
-  );
+
+  const hinduNamesForDate = (date: string) => getInauspiciousPeriodsForDate(date).map((p) => p.name);
+  const hinduLines = Array.from(groupDatesByName(dates, hinduNamesForDate).entries()).flatMap(([name, groupDates]) => {
+    const note = getInauspiciousPeriodsForDate(groupDates[0]).find((p) => p.name === name)!.note;
+    return groupConsecutiveDates(groupDates).map(
+      (r) => `${formatDateRangeDisplay(r.start, r.end)} falls within ${name} — ${note}.`,
+    );
+  });
 
   const lines = [...holidayLines, ...hinduLines];
   if (lines.length === 0) return null;
