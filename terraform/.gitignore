@@ -4,3 +4,4 @@
 *.tfvars
 *.pem
 tfplan
+deploy-access-key.json

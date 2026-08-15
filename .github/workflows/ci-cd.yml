@@ -34,13 +34,15 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
+    # OIDC role assumption hits AWS's new-account fraud restrictions on this
+    # account (same issue as the Memories project) — using a narrowly-scoped
+    # IAM user's access key instead. Its policy only allows sending SSM
+    # commands to this one instance, nothing else.
     steps:
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Deploy to EC2 via SSM

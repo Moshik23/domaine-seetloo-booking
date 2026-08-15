@@ -1,10 +1,11 @@
-# --- CI/CD: let GitHub Actions deploy via AWS Systems Manager, no SSH/static keys ---
-
-variable "github_repo" {
-  description = "GitHub \"owner/repo\" allowed to assume the deploy role via OIDC"
-  type        = string
-  default     = "Moshik23/domaine-seetloo-booking"
-}
+# --- CI/CD: let GitHub Actions deploy via AWS Systems Manager ---
+#
+# OIDC (federated role assumption, no static keys) was tried first but this AWS
+# account hits AWS's new-account fraud restrictions on sts:AssumeRoleWithWebIdentity
+# from GitHub's OIDC provider — AssumeRoleWithWebIdentity is denied even with a
+# correct trust policy (same issue hit on the Memories project). Falling back to a
+# narrowly-scoped IAM user + access key instead: it can only send SSM commands to
+# this one instance, nothing else.
 
 # Let the SSM Agent (already running on Amazon Linux 2023) register the instance
 # with Systems Manager so it can receive Run Command deployments.
@@ -13,40 +14,19 @@ resource "aws_iam_role_policy_attachment" "ssm_core" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# Reuses the GitHub OIDC provider already registered in this AWS account
-# (one provider per URL per account; other projects share it).
-data "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
-}
-
 data "aws_caller_identity" "current" {}
 
-resource "aws_iam_role" "github_actions_deploy" {
-  name = "${var.project_name}-gha-deploy"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Federated = data.aws_iam_openid_connect_provider.github.arn }
-      Action    = "sts:AssumeRoleWithWebIdentity"
-      Condition = {
-        StringEquals = {
-          "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-        }
-        StringLike = {
-          # Only the master branch of this exact repo can assume the role —
-          # not PRs, not forks, not other repos sharing the account's OIDC provider.
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/master"
-        }
-      }
-    }]
-  })
+resource "aws_iam_user" "github_actions_deploy" {
+  name = "${var.project_name}-deploy"
 }
 
-resource "aws_iam_role_policy" "github_actions_deploy" {
+resource "aws_iam_access_key" "github_actions_deploy" {
+  user = aws_iam_user.github_actions_deploy.name
+}
+
+resource "aws_iam_user_policy" "github_actions_deploy" {
   name = "${var.project_name}-gha-deploy"
-  role = aws_iam_role.github_actions_deploy.id
+  user = aws_iam_user.github_actions_deploy.name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -68,8 +48,15 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
   })
 }
 
-output "github_actions_role_arn" {
-  value = aws_iam_role.github_actions_deploy.arn
+# Written to a gitignored local file, same pattern as the SSH private key in
+# main.tf — never printed to a terminal/log, only read to populate GitHub secrets.
+resource "local_sensitive_file" "deploy_access_key" {
+  content = jsonencode({
+    access_key_id     = aws_iam_access_key.github_actions_deploy.id
+    secret_access_key = aws_iam_access_key.github_actions_deploy.secret
+  })
+  filename        = "${path.module}/deploy-access-key.json"
+  file_permission = "0600"
 }
 
 output "instance_id" {
