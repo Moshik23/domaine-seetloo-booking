@@ -109,7 +109,7 @@ export function AvailabilityCalendar({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-3 text-xs font-medium text-neutral-600 dark:text-neutral-300">
             <span className="flex items-center gap-1.5 rounded-full bg-white px-2 py-1 shadow-sm ring-1 ring-neutral-200 dark:bg-neutral-800 dark:ring-neutral-700">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-indigo-500" /> Hall
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-500" /> Hall
             </span>
             <span className="flex items-center gap-1.5 rounded-full bg-white px-2 py-1 shadow-sm ring-1 ring-neutral-200 dark:bg-neutral-800 dark:ring-neutral-700">
               <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" /> Chalet
@@ -173,14 +173,14 @@ export function AvailabilityCalendar({
 
             let cellBg = "bg-white dark:bg-neutral-900";
             if (!inCurrentMonth) cellBg = "bg-neutral-50 dark:bg-neutral-950";
-            else if (bothBooked) cellBg = "bg-gradient-to-br from-indigo-50 to-emerald-50 dark:from-indigo-950/40 dark:to-emerald-950/40";
-            else if (hallBooked) cellBg = "bg-indigo-50 dark:bg-indigo-950/40";
+            else if (bothBooked) cellBg = "bg-gradient-to-br from-blue-50 to-emerald-50 dark:from-blue-950/40 dark:to-emerald-950/40";
+            else if (hallBooked) cellBg = "bg-blue-50 dark:bg-blue-950/40";
             else if (chaletBooked) cellBg = "bg-emerald-50 dark:bg-emerald-950/40";
 
             let borderColor = "border-neutral-200 dark:border-neutral-800";
             if (isSelected) borderColor = "border-rose-400 dark:border-rose-600";
             else if (bothBooked) borderColor = "border-neutral-200 dark:border-neutral-800";
-            else if (hallBooked) borderColor = "border-indigo-200 dark:border-indigo-900";
+            else if (hallBooked) borderColor = "border-blue-200 dark:border-blue-900";
             else if (chaletBooked) borderColor = "border-emerald-200 dark:border-emerald-900";
 
             return (
@@ -211,7 +211,7 @@ export function AvailabilityCalendar({
                 <span className={isToday ? "font-bold text-rose-700 dark:text-rose-400" : "font-medium"}>{dayNum}</span>
                 <span className="mt-1.5 flex gap-1">
                   <span
-                    className={`h-1.5 w-4 rounded-full ${hallBooked ? "bg-indigo-500" : "bg-neutral-200 dark:bg-neutral-700"}`}
+                    className={`h-1.5 w-4 rounded-full ${hallBooked ? "bg-blue-500" : "bg-neutral-200 dark:bg-neutral-700"}`}
                     aria-hidden
                   />
                   <span
@@ -254,7 +254,7 @@ export function AvailabilityCalendar({
               </p>
             ) : (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <VenueDetail label="Hall" accent="indigo" occupants={selectedOccupancy.HALL} />
+                <VenueDetail label="Hall" accent="blue" occupants={selectedOccupancy.HALL} />
                 <VenueDetail label="Chalet" accent="emerald" occupants={selectedOccupancy.CHALET} />
               </div>
             )}
@@ -271,11 +271,11 @@ function VenueDetail({
   occupants,
 }: {
   label: string;
-  accent: "indigo" | "emerald";
+  accent: "blue" | "emerald";
   occupants: DayOccupant[];
 }) {
-  const borderClass = accent === "indigo" ? "border-indigo-300 dark:border-indigo-700" : "border-emerald-300 dark:border-emerald-700";
-  const dotClass = accent === "indigo" ? "bg-indigo-500" : "bg-emerald-500";
+  const borderClass = accent === "blue" ? "border-blue-300 dark:border-blue-700" : "border-emerald-300 dark:border-emerald-700";
+  const dotClass = accent === "blue" ? "bg-blue-500" : "bg-emerald-500";
 
   if (occupants.length === 0) {
     return (
